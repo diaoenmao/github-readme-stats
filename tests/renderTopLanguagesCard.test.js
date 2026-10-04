@@ -530,6 +530,40 @@ describe("Test renderTopLanguages", () => {
     });
   });
 
+  it("should use additional compact columns when the card is wider", () => {
+    const manyLangs = Object.fromEntries(
+      Array.from({ length: 11 }, (_, index) => [
+        `Language${index}`,
+        { name: `Language${index}`, size: 11 - index, color: "#123456" },
+      ]),
+    );
+    const heights = [300, 467, 880].map((width) => {
+      document.body.innerHTML = renderTopLanguages(manyLangs, {
+        layout: "compact",
+        card_width: width,
+        langs_count: 20,
+      });
+      const labels = queryAllByTestId(document.body, "lang-name");
+      expect(labels).toHaveLength(11);
+      labels.forEach((label, index) => {
+        expect(label).toHaveTextContent(`Language${index} `);
+      });
+      return Number(document.querySelector("svg").getAttribute("height"));
+    });
+    expect(heights[0]).toBe(heights[1]);
+    expect(heights[2]).toBeLessThan(heights[1]);
+    // The wider card fits five items on its first row, then wraps.
+    const labels = queryAllByTestId(document.body, "lang-name");
+    expect(labels[4].parentElement.parentElement).toHaveAttribute(
+      "transform",
+      "translate(664, 0)",
+    );
+    expect(labels[5].parentElement.parentElement.parentElement).toHaveAttribute(
+      "transform",
+      "translate(0, 25)",
+    );
+  });
+
   it("should render with layout compact", () => {
     document.body.innerHTML = renderTopLanguages(langs, { layout: "compact" });
 

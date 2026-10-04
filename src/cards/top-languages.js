@@ -107,10 +107,11 @@ const getCircleLength = (radius) => {
  * Calculates height for the compact layout.
  *
  * @param {number} totalLangs Total number of languages.
+ * @param {number} columns Number of legend columns.
  * @returns {number} Card height.
  */
-const calculateCompactLayoutHeight = (totalLangs) => {
-  return COMPACT_LAYOUT_BASE_HEIGHT + Math.round(totalLangs / 2) * 25;
+const calculateCompactLayoutHeight = (totalLangs, columns = 2) => {
+  return COMPACT_LAYOUT_BASE_HEIGHT + Math.ceil(totalLangs / columns) * 25;
 };
 
 /**
@@ -292,6 +293,45 @@ const createCompactLangNode = ({
 };
 
 /**
+ * Fit compact legend columns to the card width and rendered labels.
+ *
+ * @param {object} props Legend properties.
+ * @param {Lang[]} props.langs Languages to display.
+ * @param {number} props.totalSize Total language size.
+ * @param {boolean=} props.hideProgress Whether to hide percentages.
+ * @param {string=} props.statsFormat Display format.
+ * @param {number=} props.width Card width.
+ * @returns {{columns: number, gap: number}} Legend column count and spacing.
+ */
+const compactLegendLayout = ({
+  langs,
+  totalSize,
+  hideProgress,
+  statsFormat = "percentages",
+  width,
+}) => {
+  const minGap = Math.max(
+    150,
+    ...langs.map((lang) => {
+      const value = getDisplayValue(
+        lang.size,
+        (lang.size / totalSize) * 100,
+        statsFormat,
+      );
+      return 20 + measureText(`${lang.name} ${hideProgress ? "" : value}`, 11);
+    }),
+  );
+  const availableWidth = width ? width - CARD_PADDING * 2 : 0;
+  const columns = width
+    ? Math.min(langs.length, Math.max(2, Math.floor(availableWidth / minGap)))
+    : 2;
+  return {
+    columns,
+    gap: columns > 2 ? availableWidth / columns : minGap,
+  };
+};
+
+/**
  * Create compact languages text items for all programming languages.
  *
  * @param {object} props Function properties.
@@ -299,6 +339,7 @@ const createCompactLangNode = ({
  * @param {number} props.totalSize Total size of all languages.
  * @param {boolean=} props.hideProgress Whether to hide percentage.
  * @param {string=} props.statsFormat Stats format
+ * @param {number=} props.width Card width.
  * @returns {string} Programming languages SVG node.
  */
 const createLanguageTextNode = ({
@@ -306,9 +347,16 @@ const createLanguageTextNode = ({
   totalSize,
   hideProgress,
   statsFormat,
+  width,
 }) => {
-  const longestLang = getLongestLang(langs);
-  const chunked = chunkArray(langs, langs.length / 2);
+  const { columns, gap } = compactLegendLayout({
+    langs,
+    totalSize,
+    hideProgress,
+    statsFormat,
+    width,
+  });
+  const chunked = chunkArray(langs, columns);
   const layouts = chunked.map((array) => {
     // @ts-ignore
     const items = array.map((lang, index) =>
@@ -322,17 +370,14 @@ const createLanguageTextNode = ({
     );
     return flexLayout({
       items,
-      gap: 25,
-      direction: "column",
+      gap,
     }).join("");
   });
 
-  const percent = ((longestLang.size / totalSize) * 100).toFixed(2);
-  const minGap = 150;
-  const maxGap = 20 + measureText(`${longestLang.name} ${percent}%`, 11);
   return flexLayout({
     items: layouts,
-    gap: maxGap < minGap ? minGap : maxGap,
+    gap: 25,
+    direction: "column",
   }).join("");
 };
 
@@ -451,6 +496,7 @@ const renderCompactLayout = (
         totalSize: totalLanguageSize,
         hideProgress,
         statsFormat,
+        width,
       })}
     </g>
   `;
@@ -848,8 +894,16 @@ const renderTopLanguages = (topLangs, options = {}) => {
       stats_format,
     );
   } else if (layout === "compact" || hide_progress == true) {
+    const { columns } = compactLegendLayout({
+      langs,
+      totalSize: totalLanguageSize,
+      hideProgress: hide_progress,
+      statsFormat: stats_format,
+      width,
+    });
     height =
-      calculateCompactLayoutHeight(langs.length) + (hide_progress ? -25 : 0);
+      calculateCompactLayoutHeight(langs.length, columns) +
+      (hide_progress ? -25 : 0);
 
     finalLayout = renderCompactLayout(
       langs,

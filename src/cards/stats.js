@@ -297,6 +297,9 @@ const renderStatsCard = (stats, options = {}) => {
     show = [],
   } = options;
 
+  const rankLevel =
+    rank_icon === "letter" ? rank.level.replace(/[+-]$/, "") : rank.level;
+
   const lheight = parseInt(String(line_height), 10);
 
   // returns theme based colors with proper overrides and defaults
@@ -560,7 +563,7 @@ const renderStatsCard = (stats, options = {}) => {
         <circle class="rank-circle-rim" cx="-10" cy="8" r="40" />
         <circle class="rank-circle" cx="-10" cy="8" r="40" />
         <g class="rank-text">
-          ${rankIcon(rank_icon, rank?.level, rank?.percentile)}
+          ${rankIcon(rank_icon, rankLevel, rank?.percentile)}
         </g>
       </g>`;
 
@@ -582,7 +585,7 @@ const renderStatsCard = (stats, options = {}) => {
     .join(", ");
 
   card.setAccessibilityLabel({
-    title: `${card.title}, Rank: ${rank.level}`,
+    title: `${card.title}, Rank: ${rankLevel}`,
     desc: labels,
   });
 

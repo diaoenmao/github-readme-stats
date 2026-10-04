@@ -393,7 +393,7 @@ If we don't support your language, please consider contributing! You can find mo
 | `hide_title` | Hides the title of your stats card. | boolean | `false` |
 | `card_width` | Sets the card's width manually. | number | `500px  (approx.)` |
 | `hide_rank` | Hides the rank and automatically resizes the card width. | boolean | `false` |
-| `rank_icon` | Shows alternative rank icon (i.e. `github`, `percentile` or `default`). | enum | `default` |
+| `rank_icon` | Shows `default`, `github`, `percentile`, or `letter` (base grade without a plus/minus suffix; calculated score is unchanged). | enum | `default` |
 | `show_icons` | Shows icons near all stats. | boolean | `false` |
 | `include_all_commits` | Count total commits instead of just the current year commits. | boolean | `false` |
 | `line_height` | Sets the line height between text. | integer | `25` |
